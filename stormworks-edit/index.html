@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Stormworks SimpleMission Builder</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="app">
+    <div class="container-fluid mt-5">
+        <div class="row">
+            <div class="col-6">
+                <h2>Edit</h2>
+                <hr>
+
+                <div class="card" v-for="(mission,mission_index) in missions">
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <label for="mission-id" class="col-4 col-form-label" data-toggle="tooltip" title="コマンド等で指定するミッションのID。半角英数・アンダーバーのみ使用可能">ミッションID<span class="text-danger">*</span></label>
+                            <div class="col-8">
+                                <input name="mission-name" type="text" class="form-control" v-model="mission.id">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="mission-name" class="col-4 col-form-label" data-toggle="tooltip" title="通知に表示されます">ミッションタイトル<span class="text-danger">*</span></label>
+                            <div class="col-8">
+                                <input name="mission-name" type="text" class="form-control" v-model="mission.name">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="location-name" class="col-4 col-form-label" data-toggle="tooltip" title="ゲーム内のミッションエディタで作成したLocationの名前">Location名<span class="text-danger">*</span></label>
+                            <div class="col-8">
+                                <input name="location-name" type="text" class="form-control" v-model="mission.location">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="base-reward" class="col-4 col-form-label" data-toggle="tooltip" title="ミッション達成時にもらえるお金。最後のステップの目標を1つ以上達成したときに獲得できます">報酬（$）</label>
+                            <div class="col-8">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">$</div>
+                                    </div>
+                                    <input name="base-reward" type="number" class="form-control" v-model="mission.reward">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="base-research" class="col-4 col-form-label" data-toggle="tooltip" title="ミッション達成時にもらえるお金。最後のステップの目標を1つ以上達成したときに獲得できます">報酬（RP）</label>
+                            <div class="col-8">
+                                <input name="base-research" type="number" class="form-control" v-model="mission.research">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="probability" class="col-4 col-form-label" data-toggle="tooltip" title="ミッションの発生確率。詳しくはリファレンス参照">発生確率(0.01~0.99)<span class="text-danger">*</span></label>
+                            <div class="col-8">
+                                <div class="input-group">
+                                    <input name="probability" type="text" class="form-control" v-model.number="mission.probability">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-4"></div>
+                            <div class="col-8">
+                                <div class="custom-control custom-checkbox custom-control-inline" data-toggle="tooltip" title="ONの場合、コマンドで指定しない限り発生しません">
+                                    <input id="no_auto_spawn" name="mission_option"  type="checkbox" checked="checked" class="custom-control-input" value="rabbit">
+                                    <label for="no_auto_spawn" class="custom-control-label">自動スポーンさせない</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>目標</h4>
+                        <div v-for="(m, i) in grouped_tasks[mission_index]">
+                        <h5>Step {{i}}</h5>
+                        <div class="card" v-for="(task, task_index) in m">
+                            <div class="card-body">
+                                <div class="form-group row">
+                                    <label for="task-name" class="col-4 col-form-label" data-toggle="tooltip" title="通知やマップマーカーに表示されます">タイトル<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <input type="text" class="form-control" v-model="task.name">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="task-desc" class="col-4 col-form-label" data-toggle="tooltip" title="マップマーカーに表示されます">説明<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <textarea name="task-desc" cols="40" rows="3" class="form-control" v-model="task.desc"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="task-timelimit" class="col-4 col-form-label" data-toggle="tooltip" title="目標が失敗するまでの制限時間">制限時間</label>
+                                    <div class="col-8">
+                                        <div class="input-group">
+                                            <input  name="task-timelimit" type="number" class="form-control" v-model.number="task.timelimit">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text">分</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="mission-type" class="col-4 col-form-label"  data-toggle="tooltip" title="目標の種類">目標タイプ<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <select name="mission-type" class="custom-select" v-model="task.type">
+                                            <option value="goto_zone">指定ゾーンに移動</option>
+                                            <option value="rescue">人を救助</option>
+                                            <option value="extinguish">火災を消火</option>
+                                            <option value="deliver_survivor">人を指定地点に輸送</option>
+                                            <option value="deliver_vehicle">Vehicleを指定地点に輸送</option>
+                                            <option value="deliver_object">Objectを指定地点に輸送</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="task-reward" class="col-4 col-form-label" data-toggle="tooltip" title="目標を達成した際にもらえるお金">報酬（現金）</label>
+                                    <div class="col-8">
+                                        <input name="task-reward" type="text" class="form-control" v-model.number="task.base_reward">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="task-research" class="col-4 col-form-label"  data-toggle="tooltip" title="目標を達成した際にもらえるリサーチポイント">報酬（RP）</label>
+                                    <div class="col-8">
+                                        <input name="task-research" type="text" class="form-control" v-model.number="task.base_research">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="task.type === 'goto_zone'">
+                                    <label for="task-zone" class="col-4 col-form-label"  data-toggle="tooltip" title="ゲーム内エディタで設置したゾーン名。詳しくはチュートリアル参照">目標ゾーン名<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <input name="task-zone" type="text" class="form-control" v-model="task.zone">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="task.type === 'goto_zone'">
+                                    <label for="zone-radium" class="col-4 col-form-label"  data-toggle="tooltip" title="ゾーンの半径（メートル単位）ゲーム内エディタで指定したサイズは無視されます">目標ゾーンの半径<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <div class="input-group">
+                                            <input name="zone-radium" type="text" class="form-control" v-model.number="task.zone_size">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text">m</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['extinguish'])">
+                                    <label for="tag" class="col-4 col-form-label" data-toggle="tooltip" title="指定した場合、tagが一致する炎のみ消火対象にする">対象Fireのtag</label>
+                                    <div class="col-8">
+                                        <input name="tag" type="text" class="form-control" v-model="task.tag">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['deliver_object', 'deliver_survivor', 'deliver_vehicle'])">
+                                    <label for="mt" class="col-4 col-form-label"  data-toggle="tooltip" title="指定した場合、Marker textが一致したもののみ配達対象にする">配達対象のMarker text</label>
+                                    <div class="col-8">
+                                        <input name="mt" type="text" class="form-control" v-model="task.deliver_name">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['rescue'])">
+                                    <label for="mt" class="col-4 col-form-label"  data-toggle="tooltip" title="指定した場合、Marker textが一致した生存者のみ救助対象にする">救助対象のMarker text</label>
+                                    <div class="col-8">
+                                        <input name="mt" type="text" class="form-control" v-model="task.rescue_name">
+                                    </div>
+                                </div>
+
+                                <div class="form-group row" v-if="matchValue(task.type, ['deliver_object', 'deliver_survivor', 'deliver_vehicle'])">
+                                    <label for="dzone" class="col-4 col-form-label" data-toggle="tooltip" title="ゲーム内エディタで指定したCargo zone（詳しくはチュートリアル参照）">配送先のCargo zone<span class="text-danger">*</span></label>
+                                    <div class="col-8">
+                                        <input name="dzone" type="text" class="form-control" v-model="task.deliver_zone">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['deliver_survivor', 'rescue'])">
+                                    <label for="text" class="col-4 col-form-label" data-toggle="tooltip" title="一人を無事に送り届けた際にもらえるお金">1人救助毎の報酬（$）</label>
+                                    <div class="col-8">
+                                        <input name="text" type="text" class="form-control" v-model.number="task.reward_per_survivor">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['deliver_survivor', 'rescue'])">
+                                    <label for="text1" class="col-4 col-form-label" data-toggle="tooltip" title="一人を無事に送り届けた際にもらえるリサーチポイント">1人救助毎の報酬（RP）</label>
+                                    <div class="col-8">
+                                        <input  name="text1" type="text" class="form-control" v-model.number="task.research_per_survivor">
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['deliver_survivor', 'rescue'])">
+                                    <div class="col-4"></div>
+                                    <div class="col-8">
+                                        <div class="custom-control custom-checkbox custom-control-inline" data-toggle="tooltip" title="チェックされている場合、HPが減少している生存者の場合も時間経過で減少しない">
+                                            <input v-bind:id="`nobleed-${i}-${task_index}`" name="mission_option"  type="checkbox" class="custom-control-input" v-model="task.no_bleed">
+                                            <label v-bind:for="`nobleed-${i}-${task_index}`" class="custom-control-label">負傷時のHP継続ダメージを無効</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row" v-if="matchValue(task.type, ['extinguish'])">
+                                    <div class="col-4"></div>
+                                    <div class="col-8">
+                                        <div class="custom-control custom-checkbox custom-control-inline" data-toggle="tooltip" title="チェックされている場合、配置されているVehicleに燃え移っていても無視する">
+                                            <input v-bind:id="`vfire-${i}-${task_index}`"  type="checkbox" class="custom-control-input" v-model="task.ignore_vehicle">
+                                            <label v-bind:for="`vfire-${i}-${task_index}`" class="custom-control-label">Vehicleの火災を無視</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-light" v-on:click="moveTask(mission, task, -1)">↑</button>
+                                <button class="btn btn-light" v-on:click="moveTask(mission, task, 1)">↓</button>
+                                <button class="btn btn-danger"  v-on:click="removeTask(mission_index, task_index)">X</button>
+                            </div>
+
+                        </div>
+                        </div>
+                        <button class="btn btn-primary" v-on:click="addTask(mission_index)">Add Task</button>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-6">
+                <h2>Output</h2>
+                <pre>{{script_out}}</pre>
+                <hr>
+                <div class="card">
+                    <div class="card-header">
+                        ヘルプ
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            <a href="https://github.com/palon7/simplemission">SimpleMission</a>スクリプト用のミッションエディタです。<br>
+                            必要な項目を入力して上部に生成されたコードを、<code>local mm_missions={}</code>の括弧の中にコピーしてください。
+                        </p>
+                        <p>
+                            目標左下の↑↓ボタンでステップを移動します。Xでその目標を削除します。
+                        </p>
+                        <p>
+                            項目名にマウスを重ねると説明が表示されます。<br>
+                            現時点では入力チェックをしていないので、次の事に注意してください。
+                        </p>
+                        <ul>
+                            <li>「報酬・制限時間・半径」は整数のみにする（小数点は不可）</li>
+                            <li>文字列はすべて半角英数にする</li>
+                            <li><span class="text-danger">*</span>がついている項目は必須</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/i18next@19.7.0/dist/umd/i18next.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js" integrity="sha384-1CmrxMRARb6aLqgBO7yyAxTOQE2AKb9GfXnEo760AUcUmFx3ibVJJAzGytlQcNXd" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+
+<script src="js/app.js"></script>
+</body>
+</html>

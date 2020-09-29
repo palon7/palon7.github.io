@@ -1,0 +1,9 @@
+    <mission_id> = {
+        title = "<name>",
+        location = "<location>",
+        base_reward = <reward>,
+        base_research = <research>,
+        probability = <probability>,
+        tasks = {
+<tasks>        }
+    },
