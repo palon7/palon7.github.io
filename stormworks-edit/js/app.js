@@ -10,8 +10,8 @@ const task_template =
         timelimit: 60,
         zone: "",
         zone_size: 100,
-        deliver_name: "",
-        deliver_zone: "",
+        delivery_name: "",
+        delivery_zone: "",
         reward_per_survivor:0,
         research_per_survivor:0,
         rescue_name:"",
@@ -143,8 +143,8 @@ const vm = new Vue({
                             }
                         case "deliver_vehicle":
                         case "deliver_object":
-                            if (/^(deliver_zone)$/.test(key)){ valid_key = true; }
-                            if (key === "deliver_name" && value){
+                            if (/^(delivery_zone)$/.test(key)){ valid_key = true; }
+                            if (key === "delivery_name" && value){
                                 valid_key = true;
                             }
                             break;
